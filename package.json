@@ -1,7 +1,7 @@
 {
   "name": "tubli",
   "description": "A new CLI generated with oclif",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "author": "Benedikt Geiger",
   "bin": {
     "tubli": "./bin/run.js"
