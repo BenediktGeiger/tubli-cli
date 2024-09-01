@@ -1,12 +1,11 @@
 {
   "name": "tubli",
-  "description": "A new CLI generated with oclif",
-  "version": "0.0.2",
+  "description": "The TUBLI Command Line Interface is a unified tool to query the sonapi API (sonapi.ee)",
+  "version": "0.1.0",
   "author": "Benedikt Geiger",
   "bin": {
     "tubli": "./bin/run.js"
   },
-  "bugs": "https://github.com/sonapi/tubli/issues",
   "dependencies": {
     "@oclif/core": "^4",
     "@oclif/plugin-help": "^6",
@@ -41,7 +40,7 @@
     "/dist",
     "/oclif.manifest.json"
   ],
-  "homepage": "https://github.com/sonapi/tubli",
+  "homepage": "https://github.com/BenediktGeiger/tubli-cli",
   "keywords": [
     "oclif"
   ],
