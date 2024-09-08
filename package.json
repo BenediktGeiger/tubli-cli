@@ -1,7 +1,7 @@
 {
   "name": "tubli",
   "description": "The TUBLI Command Line Interface is a unified tool to query the sonapi API (sonapi.ee)",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "author": "Benedikt Geiger",
   "bin": {
     "tubli": "./bin/run.js"
