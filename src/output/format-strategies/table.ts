@@ -1,7 +1,14 @@
 import chalk from 'chalk'
 import CliTable, {type Table} from 'cli-table3'
 
-import {Meaning, SingleSearchResult, SonapiResponse, Translation, WordForm} from '../../types/index.js'
+import {
+  Meaning,
+  MeaningTranslations,
+  SingleSearchResult,
+  SonapiResponse,
+  Translation,
+  WordForm,
+} from '../../types/index.js'
 import {OutputFormatStrategy} from '../format.strategy.js'
 
 export class TableFormatStrategy implements OutputFormatStrategy {
@@ -45,9 +52,9 @@ export class TableFormatStrategy implements OutputFormatStrategy {
       '',
     )
     const examples = meaning.examples?.slice(0, 3).join('\n') ?? ''
-    const synonyms = meaning.synonyms?.join(', ') ?? ''
-
-    // TODO add translations
+    const synonyms = meaning.synonyms?.slice(0, 5).join(', ') ?? ''
+    const rection = meaning.rection ?? ''
+    const translations = this.filterTranslations(meaning.translations).join('\n')
 
     if (definition) {
       meaningTable.push({Definition: definition})
@@ -55,6 +62,10 @@ export class TableFormatStrategy implements OutputFormatStrategy {
 
     if (partOfSpeech) {
       meaningTable.push({'Part of speech': partOfSpeech})
+    }
+
+    if (rection) {
+      meaningTable.push({Rection: rection})
     }
 
     if (examples) {
@@ -65,7 +76,46 @@ export class TableFormatStrategy implements OutputFormatStrategy {
       meaningTable.push({Synonyms: synonyms})
     }
 
+    if (translations) {
+      meaningTable.push({Translations: translations})
+    }
+
     return meaningTable
+  }
+
+  private filterTranslations(translations: MeaningTranslations): string[] {
+    const result: string[] = []
+
+    for (const [lang, translationsList] of Object.entries(translations)) {
+      const uniqueByWeight: {[weight: number]: string} = {}
+
+      for (const translation of translationsList) {
+        let {words, weight} = translation
+
+        // If there are multiple words (comma-separated), limit them to the first 2 words
+        const wordArray = words.split(',').map((w) => w.trim())
+        if (wordArray.length >= 2) {
+          words = wordArray.slice(0, 2).join(',')
+        }
+
+        if (uniqueByWeight[weight] === undefined) {
+          uniqueByWeight[weight] = words
+        }
+      }
+
+      const sortedByWeight = Object.entries(uniqueByWeight)
+        .map(([weight, words]) => ({
+          words,
+          weight: Number.parseFloat(weight),
+        }))
+        .sort((a, b) => b.weight - a.weight) // Sort in descending order of weight
+
+      const formattedString = `${lang}: ${sortedByWeight.map(({words, weight}) => `${words}(${weight})`).join(' | ')}`
+
+      result.push(formattedString)
+    }
+
+    return result
   }
 
   private getWordFormsTable(searchResult: SingleSearchResult): Table | null {

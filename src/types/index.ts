@@ -4,14 +4,26 @@ export type WordForm = {
   morphValue: string
   value: string
 }
+
+export type MeaningTranslation = {
+  words: string
+  weight: number
+}
+
+export type MeaningTranslations = {
+  [languageCode: string]: MeaningTranslation[]
+}
+
 export type Meaning = {
   definition: string
   synonyms: string[]
   examples: string[]
+  rection: string
   partOfSpeech: {
     code: string
     value: string
   }[]
+  translations: MeaningTranslations
 }
 
 export type WordClasses = string
