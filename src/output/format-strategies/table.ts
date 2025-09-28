@@ -1,3 +1,4 @@
+/* eslint-disable unicorn/prefer-native-coercion-functions */
 import chalk from 'chalk'
 import CliTable, {type Table} from 'cli-table3'
 
@@ -9,37 +10,43 @@ import {
   Translation,
   WordForm,
 } from '../../types/index.js'
+import {QueryFlags} from '../context.js'
 import {OutputFormatStrategy} from '../format.strategy.js'
 
 export class TableFormatStrategy implements OutputFormatStrategy {
-  display(data: SonapiResponse): string {
+  display(data: SonapiResponse, queryFlags: QueryFlags): string {
     let resultString = ''
     for (const result of data.searchResult) {
       const wordFormsTable = this.getWordFormsTable(result)
 
-      if (wordFormsTable) {
+      if (wordFormsTable && queryFlags.queryWordForms) {
         resultString += ' Word Forms\n'
         resultString += wordFormsTable.toString() + '\n'
       }
 
       const translationsTable = this.getTranslationsTable(data.translations)
 
-      if (translationsTable) {
+      if (translationsTable && queryFlags.queryTranslations) {
         resultString += ' Translations\n'
         resultString += translationsTable.toString() + '\n'
       }
 
-      resultString += ' Meanings\n'
+      if (Object.values(queryFlags.meanings).some((flag) => flag)) {
+        resultString += ' Meanings\n'
+      }
+
       for (const meaning of result.meanings) {
-        const meaningTable = this.getMeaningsTable(meaning)
-        resultString += meaningTable.toString() + '\n'
+        const meaningTable = this.getMeaningsTable(meaning, queryFlags)
+        if (meaningTable) {
+          resultString += meaningTable.toString() + '\n'
+        }
       }
     }
 
     return resultString
   }
 
-  private getMeaningsTable(meaning: Meaning): Table {
+  private getMeaningsTable(meaning: Meaning, queryFlags: QueryFlags): Table | null {
     const meaningTable = new CliTable({
       colWidths: [20, 80],
       wordWrap: true,
@@ -56,28 +63,32 @@ export class TableFormatStrategy implements OutputFormatStrategy {
     const rection = meaning.rection ?? ''
     const translations = this.filterTranslations(meaning.translations).join('\n')
 
-    if (definition) {
+    if (definition && queryFlags.meanings.queryDefinition) {
       meaningTable.push({Definition: definition})
     }
 
-    if (partOfSpeech) {
+    if (partOfSpeech && queryFlags.meanings.queryPartOfSpeech) {
       meaningTable.push({'Part of speech': partOfSpeech})
     }
 
-    if (rection) {
+    if (rection && queryFlags.meanings.queryRection) {
       meaningTable.push({Rection: rection})
     }
 
-    if (examples) {
+    if (examples && queryFlags.meanings.queryExamples) {
       meaningTable.push({Examples: examples})
     }
 
-    if (synonyms) {
+    if (synonyms && queryFlags.meanings.querySynonyms) {
       meaningTable.push({Synonyms: synonyms})
     }
 
-    if (translations) {
+    if (translations && queryFlags.meanings.queryMeaningTranslations) {
       meaningTable.push({Translations: translations})
+    }
+
+    if (meaningTable.length === 0) {
+      return null
     }
 
     return meaningTable

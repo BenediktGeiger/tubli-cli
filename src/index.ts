@@ -29,6 +29,11 @@ export default class Tubli extends Command {
       options: ['table', 'plain', 'json'],
       default: 'table',
     }),
+    query: Flags.string({
+      char: 'q',
+      description: 'filter response',
+      default: 'wordforms[*],translations[*],meanings[definition|partofspeech|examples|synonyms|translations]',
+    }),
     language: Flags.string({
       char: 'l',
       default: 'et',
@@ -53,21 +58,25 @@ export default class Tubli extends Command {
         return
       }
 
-      const outputContext = new OutputContext(flags.mode as 'json' | 'plain' | 'table')
+      const outputContext = new OutputContext(flags.mode as 'json' | 'plain' | 'table', flags.query)
 
       this.log(outputContext.displayData(apiResponses))
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      const status = error?.response?.status ?? error?.response?.data?.status
+      if (axios.isAxiosError(error)) {
+        const status = error.status ?? error?.response?.status ?? error?.response?.data?.status
+        const errorMessage = chalk.red(error?.response?.data?.message ?? error?.message ?? 'Unknown error')
 
-      if (!status) {
-        this.error(`Unable to reach ${SONAPI_API_URL}`)
+        this.log(`Error (${status}) while calling ${chalk.yellow(url)}\n${errorMessage}`)
+        return
       }
 
-      const errorMessage = chalk.red(error?.response?.data?.message ?? error?.message ?? 'Unknown error')
+      if (error?.cause === 'QUERY_ERROR') {
+        this.log(`Query: ${chalk.yellow(flags.query)} is invalid. Please check the query format with tubli --help`)
+      }
 
-      this.log(`Error (${status}) while calling ${chalk.yellow(url)}\n${errorMessage}`)
+      this.error(`Error: ${error.message}`)
     }
   }
 }
